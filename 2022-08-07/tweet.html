@@ -3,25 +3,27 @@
 
 <head>
 	<meta charset="UTF-8">
-	<title>Document</title>
-	<script src="https://cdn.jsdelivr.net/npm/vue@2.6.12/dist/vue.js"></script>
+	<title>twitter log light</title>
+	<script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js"></script>
 </head>
 
 <body>
-	<div id="v-tw">
+	<div id="v-tw" v-cloak>
 		<div v-if="noTwData">
 			<h1>Oops! 何かがおかしいようです。</h1>
-			<p>tweet.jsを読み込めなかったか、表示できるデータがありませんでした。</p>
+			<p>tweets.jsを読み込めなかったか、表示できるデータがありませんでした。</p>
 			<hr>
 		</div>
-		<button v-else v-on:click="ToggleReadMe">{{ShowMessage()}}</button>
+		<button v-else v-on:click="toggleReadMe">{{showMessage()}}</button>
 		<div v-if="isReadMe">
 			<h2>これは何？</h3>
-				<p>Twitterのバックアップデータ「tweet.js」を画面上に表示させる簡易的なツールです。</p>
+				<p>Twitterのバックアップデータ「tweets.js」を画面上に表示させる簡易的なツールです。</p>
 				<h2>どうやって使うの？</h2>
-				<p>tweet.jsと同じフォルダにこのhtmlとvue.2.6.11.min.jsを配置してください。<br>後はお好きなブラウザでhtmlをプレビューするだけです。</p>
+				<p>「Your archive.html」と同じフォルダにこのhtmlを配置してください。<br>後はお好きなブラウザでhtmlをプレビューするだけです。</p>
+				<p>検索は入力と同時に結果を反映します。キーワードは本文から含むものを、RTとLikeは入力された数値以上を抽出します。</p>
 				<h2>注意することは？</h2>
-				<p>tweet.jsはファイル名・ソースコード共に完全無加工のままでお願いします。</p>
+				<p>tweets.jsはファイル名・ソースコード共に完全無加工のままでお願いします。</p>
+				<p>※2022/11/21時点は「tweets.js」ですが、ある時期より過去のアーカイブは「tweet.js」の可能性があります。（いつから切り替わったのかは不明です。すみません）<br>tweet.jsの場合、YTD.tweets.part0もYTD.tweet.part0に直す必要があります。</p>
 				<h2>いじって良いの？</h2>
 				<p>非営利＆個人でお楽しみください。自由なカスタマイズを想定し、余計なタグやCSSは極力付けておりません。</p>
 				<h2>今後もメンテしていく？</h2>
@@ -35,12 +37,21 @@
 
 		<!-- データバインド -->
 		<div v-if="!noTwData">
-			<p>{{twData.length}} 件 読み込みました。</p>
 
-			<!-- 全件ver -->
-			<div v-for="(tw,i) in twDataSorted" v-bind:id="tw.id">
+			<!-- 検索 -->
+			<div>
+				<span>{{twDataSortedShow.length}} 件表示 / ({{twData.length}}件中)</span>
+				<br>
+				<input type="text" v-model="input.keyword" placeholder="キーワード">
+				RT: <input type="number" v-model="input.rt" placeholder="RT" min="0" max="9999">
+				Like: <input type="number" v-model="input.like" placeholder="Like" min="0" max="9999">
+				<button @click="clearSearch">clear</button>
+			</div>
+
+			<!-- タイムライン -->
+			<div v-for="(tw,i) in twDataSortedShow" v-bind:id="tw.id" :data-debug="tw.index">
 				<hr>
-				<p v-bind:style="styles">[{{i}}] {{formatDate(tw.created_at)}}<br>{{tw.full_text}}</p>
+				<p v-bind:style="styles">[{{tw.index}}] {{formatDate(tw.created_at)}}<br>{{tw.full_text}}</p>
 				<template v-if="tw.entities.urls.length > 0">
 					<p v-for="url in tw.entities.urls">
 						<a :href="url.expanded_url" target="_blank">{{url.display_url}}</a>
@@ -53,35 +64,21 @@
 						v-bind:href="tm"
 						target="_blank"
 					>
+						<video v-if="tm.slice(-4) == '.mp4'" :src="tm" style="width:10vw;height:10vw;"></video>
 						<img
+							v-else
 							v-bind:src="tm"
 							style="width:10vw;height:10vw;object-fit: contain;"
 						/>
 					</a>
 				</template>
-				<p v-if="tw.in_reply_to_status_id"><a v-bind:href="'#' + tw.in_reply_to_status_id">返信元(#{{tw.in_reply_to_status_id}})</a></p>
+				<p>RT: {{tw.retweet_count}} / Like: {{tw.favorite_count}}</p>
+				<p>ID: #{{1594288446985580545}}</p>
+				<p v-if="tw.in_reply_to_status_id"><a v-bind:href="'#' + tw.in_reply_to_status_id">返信元 #{{tw.in_reply_to_status_id}}</a></p>
 			</div>
-
-			<!-- スレッド表示ver(途中) -->
-			<!-- <div v-for="(tw,i) in twDataFormatted" :key="`tw-${i}`">
-				<hr>
-				<p v-bind:style="styles">[{{tw.index}}] {{formatDate(tw.created_at)}}<br>{{tw.full_text}}</p>
-
-				<template v-if="tw.entities.urls.length > 0">
-					<p v-for="url in tw.entities.urls">
-						<a :href="url.expanded_url" target="_blank">{{url.display_url}}</a>
-					</p>
-				</template>
-
-				<details v-if="tw.childrenList.length > 0">
-					<summary>返信</summary>
-					<template v-for="(d,j) in tw.childrenList": key="`d-${j}`">
-						<hr>
-						<p v-bind:style="styles">[{{d.index}}] {{formatDate(d.created_at)}}<br>{{d.full_text}}</p>
-					</template>
-					<hr>
-				</details>
-			</div> -->
+		
+			<hr>
+			<a href="#v-tw">トップに戻る</a>
 		</div>
 
 		<!-- #idリンクで返信ジャンプする都合上、画面最下部を開けておく -->
@@ -99,7 +96,36 @@
 	<script>
 		let vm = new Vue({
 			el: '#v-tw',
+			computed: {
+				// twDataSorted 表示用
+				twDataSortedShow(){
+					let res = []
+					try {
+						res = JSON.parse(JSON.stringify(this.twDataSorted))
+
+						// 絞り込み：キーワード, RT, Like
+						if (this.input.keyword) {
+							res = res.filter(x => x.full_text && x.full_text.includes(this.input.keyword))
+						}
+
+						// 絞り込み：RT
+						if(this.input.rt && !isNaN(this.input.rt)){
+							const RT = Number(this.input.rt)
+							res = res.filter(x => RT <= x.retweet_count)
+						}
+
+						// 絞り込み：RT
+						if(this.input.like && !isNaN(this.input.like)){
+							const Like = Number(this.input.like)
+							res = res.filter(x => Like <= x.favorite_count)
+						}
+
+					} catch (e) {console.error(e)}
+					return res
+				},
+			},
 			data: {
+				isTweet:true,
 				noTwData: YTD.tweet.part0.length <= 0,
 				isReadMe: YTD.tweet.part0.length <= 0,
 				twData: YTD.tweet.part0,
@@ -109,6 +135,12 @@
 					'white-space': 'pre-wrap'
 				},
 				// tweet.jsは本文を「/n」で表現しています。上記の形式を採用しないとしても折返しの対応は必要かと思われます。
+
+				input:{
+					keyword:'',
+					rt:0,
+					like:0,
+				},
 			},
 			mounted() {
 				// 日付昇順ソートしたtweetデータを格納
@@ -133,17 +165,34 @@
 						}
 					})
 
-					// 画像が含まれる場合はパスのリストを作っておく
+					// メディアが含まれる場合はパスのリストを作っておく
 					if (x.tweet.extended_entities && x.tweet.extended_entities.media && x.tweet.extended_entities.media.length > 0) {
+						//debugger
 						console.log(`${x.tweet.index}: extended_entities`);
 						x.tweet.customImg = [];
 						x.tweet.extended_entities.media.forEach((m,mi)=>{
 							// 「/」で分割→末尾を取得 でパスの後半が分かる
 							const sl = m.media_url.split('/');
-							const imageName = `data/tweet_media/${x.tweet.id}-${sl[sl.length - 1]}`;
+							let imageName = `data/tweet_media/${x.tweet.id}-${sl[sl.length - 1]}`;
+
+							// 動画
+							if (m.type=='video' && m.video_info){
+								// debugger
+								imageName = `data/tweet_media/${x.tweet.id}-`
+								const mp4 = m.video_info.variants.find(x => x.bitrate== "2176000")
+								if (mp4) {
+									const mp4l = mp4.url.split('/')
+									imageName += mp4l[mp4l.length - 1]
+									imageName = imageName.split('?tag=12').join('')
+								}
+							}
+
 							x.tweet.customImg.push(imageName);
 						})
 					}
+
+					x.tweet.retweet_count = !isNaN(x.tweet.retweet_count) ? Number(x.tweet.retweet_count) : 0
+					x.tweet.favorite_count = !isNaN(x.tweet.favorite_count) ? Number(x.tweet.favorite_count) : 0
 
 					// 配列の中が1階層余計なので省いてから格納
 					this.twDataSorted.push(x.tweet);
@@ -193,26 +242,6 @@
 										}.bind(this))
 									}.bind(this));
 
-								// threadParent = this.twDataFormatted.forEach(pr => {
-								// 	console.log(pr.childrenIdList);
-								// });
-
-								// まずは childrenIdList の中にidが入っているスレッドの一番親元を探す
-								// threadParent = this.twDataFormatted.filter(pr => {
-								// 	console.log(pr);
-								// 	if (pr.childrenIdList.filter(pc => pc === x.in_reply_to_status_id).length === 1) {
-
-								// 	}
-								// });
-
-								// if (threadParent.length === 1)								console.log(threadParent);
-
-
-
-								// let parentChildren = null;
-								// while (parentChildren === null || !parentChildren.id) {
-								// 	parentChildren = this.searchParentFromChildrenList()
-								// }
 							}
 						} catch (err) {
 							console.log(`err:[${i}]`);
@@ -241,24 +270,37 @@
 				});
 			},
 			methods: {
-				formatDate: function (str) {
+				/** 日付フォーマット */
+				formatDate (str) {
 					const d = new Date(str);
 					// YYYY/MM/dd(ddd) HH:mm:ss
-					return `${d.getFullYear()}/${d.getMonth().toString().padStart(2, '0')}/${d.getDate().toString().padStart(2, '0')}(${'日月火水木金土'[d.getDay()]}) ${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}:${d.getSeconds().toString().padStart(2, '0')}`;
+					return `${d.getFullYear()}/${(d.getMonth() + 1).toString().padStart(2, '0')}/${d.getDate().toString().padStart(2, '0')}(${'日月火水木金土'[d.getDay()]}) ${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}:${d.getSeconds().toString().padStart(2, '0')}`;
 				},
-				ToggleReadMe: function () {
+				toggleReadMe () {
 					this.isReadMe = !this.isReadMe;
 				},
-				ShowMessage: function () {
+				showMessage () {
 					return this.isReadMe ? '説明を閉じる' : '説明を開く';
 				},
 
-				// 子供リストの中から返信元を探す１
-				searchParentFromChildrenList () {
+				/** 検索入力のリセット */
+				clearSearch(){
+					this.input.keyword=''
+					this.input.rt=0
+					this.input.like=0
 				},
 			},
 		});
 	</script>
+
+	<style>
+		[v-cloak] {
+			display: none;
+		}
+		[data-debug] p {
+			margin:0;
+		}
+	</style>
 </body>
 
 </html>
