@@ -271,7 +271,7 @@ window.YTD.tweets.part0 = [
               "37",
               "60"
             ],
-            "url" : "https://t.co/uPx4gHnAyc",
+            "url" : "https://twitter.com/O_yabun_TOMATO/status/1675414596805607424",
             "media_url" : "http://pbs.twimg.com/ext_tw_video_thumb/1675414144605118467/pu/img/kzLF5t47NmEG5qXw.jpg",
             "id_str" : "1675414144605118467",
             "source_user_id" : "1541018701046358016",
@@ -319,7 +319,7 @@ window.YTD.tweets.part0 = [
       "possibly_sensitive" : false,
       "created_at" : "Mon Jul 03 13:15:40 +0000 2023",
       "favorited" : false,
-      "full_text" : "RT @O_yabun_TOMATO: 俺は、あと少しで漁師になっていた https://t.co/uPx4gHnAyc",
+      "full_text" : "RT @O_yabun_TOMATO: 俺は、あと少しで漁師になっていた https://twitter.com/O_yabun_TOMATO/status/1675414596805607424",
       "lang" : "ja",
       "extended_entities" : {
         "media" : [
@@ -330,8 +330,8 @@ window.YTD.tweets.part0 = [
               "37",
               "60"
             ],
-            "url" : "https://t.co/uPx4gHnAyc",
-            "media_url" : "http://pbs.twimg.com/ext_tw_video_thumb/1675414144605118467/pu/img/kzLF5t47NmEG5qXw.jpg",
+            "url" : "https://twitter.com/O_yabun_TOMATO/status/1675414596805607424",
+            "media_url" : "https://twitter.com/O_yabun_TOMATO/status/1675414596805607424",
             "id_str" : "1675414144605118467",
             "video_info" : {
               "aspect_ratio" : [
